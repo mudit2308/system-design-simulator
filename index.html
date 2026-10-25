@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>System Design Simulator: build it, flood it, fix it</title>
+    <meta name="description" content="Drag servers, load balancers, caches, databases and queues onto a canvas, send live traffic through them and watch your architecture hold up or fall over. Six challenges teach real system design.">
+    <meta name="theme-color" content="#0b0e17">
+    <meta property="og:title" content="System Design Simulator">
+    <meta property="og:description" content="Build an architecture, flood it with traffic, watch it break, then fix it. Learn system design by playing.">
+    <meta property="og:image" content="https://mudit2308.github.io/system-design-simulator/docs/preview.png">
+    <meta property="og:url" content="https://mudit2308.github.io/system-design-simulator/">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+    <a class="skip" href="#stage">Skip to the canvas</a>
+
+    <header class="top">
+      <a class="brand" href="./" aria-label="System Design Simulator home">
+        <img src="icon.svg" width="34" height="34" alt="">
+        <span>
+          <b>System Design Simulator</b>
+          <small>Build it. Flood it with traffic. Fix it.</small>
+        </span>
+      </a>
+      <div class="modes" role="tablist" aria-label="Mode">
+        <button role="tab" id="tab-challenges" aria-selected="true" data-mode="challenge">🎯 Challenges</button>
+        <button role="tab" id="tab-sandbox" aria-selected="false" data-mode="sandbox">🧪 Sandbox</button>
+      </div>
+      <div class="top-actions">
+        <button class="ghost" id="btn-help" aria-label="How to play">?</button>
+        <button class="ghost" id="btn-share">🔗 Share</button>
+        <a class="ghost" href="https://github.com/mudit2308/system-design-simulator" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="app" id="app" data-mode="challenge">
+      <section class="mission panel" id="mission" aria-labelledby="mission-title"></section>
+
+      <aside class="left panel" aria-label="Levels and components">
+        <section class="templates" id="templates" aria-labelledby="templates-title">
+          <h2 id="templates-title" class="label">Start from</h2>
+          <div class="template-grid" id="template-list"></div>
+        </section>
+        <section class="palette-wrap" aria-labelledby="palette-title">
+          <h2 id="palette-title" class="label">Components <span class="label-note">click or drag onto the canvas</span></h2>
+          <div class="palette" id="palette"></div>
+        </section>
+        <p class="credit">Built by <a href="https://github.com/mudit2308" target="_blank" rel="noopener">Mudit Pathak</a></p>
+      </aside>
+
+      <section class="center" aria-label="Architecture canvas">
+        <div class="toolbar">
+          <div class="tool-group">
+            <button class="tool play" id="btn-play" aria-label="Pause">❚❚</button>
+            <div class="seg" role="group" aria-label="Speed">
+              <button data-speed="1" aria-pressed="true">1×</button>
+              <button data-speed="2" aria-pressed="false">2×</button>
+              <button data-speed="4" aria-pressed="false">4×</button>
+            </div>
+            <button class="tool" id="btn-chaos" title="Crash the busiest server">💥 <span>Break a server</span></button>
+            <button class="tool" id="btn-revive" hidden>🩹 <span>Revive all</span></button>
+            <button class="tool" id="btn-reset" title="Clear queues and stats">↺ <span>Reset</span></button>
+          </div>
+          <ul class="legend" aria-label="Legend">
+            <li><i class="c-read"></i>Reads</li>
+            <li><i class="c-write"></i>Writes</li>
+            <li><i class="c-static"></i>Static</li>
+            <li><i class="c-job"></i>Jobs</li>
+            <li><i class="c-fail"></i>Failed</li>
+          </ul>
+        </div>
+
+        <div class="stage" id="stage" tabindex="-1">
+          <div class="world" id="world">
+            <svg class="edges" id="edges" width="1200" height="680" viewBox="0 0 1200 680" aria-hidden="true">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#4b5675"/>
+                </marker>
+                <marker id="arrow-on" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#8fa0d8"/>
+                </marker>
+              </defs>
+              <g id="edge-layer"></g>
+              <path id="temp-edge" class="temp-edge" d=""/>
+            </svg>
+            <canvas class="particles" id="particles" aria-hidden="true"></canvas>
+            <div class="nodes" id="nodes"></div>
+          </div>
+          <div class="stage-empty" id="stage-empty" hidden>
+            <p>Add components from the left, then drag from a <b>●</b> handle to connect them.</p>
+          </div>
+        </div>
+
+        <div class="trafficbar" id="trafficbar">
+          <div class="traffic-main">
+            <label for="rps">Traffic</label>
+            <input type="range" id="rps" min="0" max="1000" step="1">
+            <output id="rps-out" for="rps">1,500 req/s</output>
+          </div>
+          <div class="traffic-more">
+            <label>Pattern
+              <select id="pattern">
+                <option value="steady">Steady</option>
+                <option value="wave">Daily wave</option>
+                <option value="spikes">Flash spikes</option>
+              </select>
+            </label>
+            <label>Writes <output id="writes-out">10%</output>
+              <input type="range" id="writes" min="0" max="90" step="5">
+            </label>
+            <label>Static files <output id="statics-out">10%</output>
+              <input type="range" id="statics" min="0" max="70" step="5">
+            </label>
+          </div>
+          <p class="traffic-lock" id="traffic-lock" hidden>🔒 Traffic is set by the level</p>
+        </div>
+      </section>
+
+      <aside class="right panel" aria-label="Live metrics">
+        <section class="metrics" aria-labelledby="metrics-title">
+          <h2 id="metrics-title" class="label">Live metrics</h2>
+          <div class="tiles">
+            <div class="tile" id="m-throughput"><span class="t-label">Served</span><b>0</b><small>req/s</small></div>
+            <div class="tile" id="m-latency"><span class="t-label">Response time</span><b>0</b><small>ms avg</small></div>
+            <div class="tile" id="m-errors"><span class="t-label">Failed</span><b>0%</b><small>of requests</small></div>
+            <div class="tile" id="m-cost"><span class="t-label">Cost</span><b>$0</b><small>per month</small></div>
+          </div>
+          <canvas id="chart" class="chart" height="110" aria-label="Chart of the last 60 seconds" role="img"></canvas>
+          <ul class="chart-legend"><li><i class="c-read"></i>Served</li><li><i class="c-write"></i>Response time</li><li><i class="c-fail"></i>Failed %</li></ul>
+        </section>
+        <section class="inspector" id="inspector" hidden aria-live="polite"></section>
+        <section class="insights" aria-labelledby="insights-title">
+          <h2 id="insights-title" class="label">What's happening</h2>
+          <ul id="insights" aria-live="polite"></ul>
+        </section>
+      </aside>
+    </main>
+
+    <dialog id="welcome" class="dialog" aria-labelledby="welcome-title">
+      <div class="dialog-body">
+        <p class="eyebrow">Learn system design by playing</p>
+        <h2 id="welcome-title">Can your architecture survive the traffic?</h2>
+        <ol class="how">
+          <li><span>1</span><div><b>Build</b><p>Drag servers, load balancers, caches, databases and queues onto the canvas and connect them.</p></div></li>
+          <li><span>2</span><div><b>Flood it</b><p>Live requests flow through your design. Turn the traffic up and watch what breaks first.</p></div></li>
+          <li><span>3</span><div><b>Fix it</b><p>Every component has a real capacity, latency and monthly cost. Hit the goals within budget.</p></div></li>
+        </ol>
+        <div class="dialog-actions">
+          <button class="primary" id="welcome-challenges">Start the challenges</button>
+          <button class="ghost" id="welcome-sandbox">Explore the sandbox</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="result" class="dialog" aria-labelledby="result-title">
+      <div class="dialog-body" id="result-body"></div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
